@@ -8,13 +8,20 @@ class Graph
 class Tree
     - Tree(int rootVal)
     - void addChild(Node *parent, int childVal)
-    - void printTree(Node *node, int depth = 0)
-    - static Tree* fromAdjMatrix(const vector<vector<int>>& adjMatrix, int
-rootVal)
+    - void printTree(Node *node, std::string prefix = "", bool isLast = true) //
+prints full tree in pretty format
+
+struct Node (Tree::Node)
+    - int data
+    - vector<Node *> child
 */
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
+#include <map>
+#include <set>
+#include <string>
 #include <vector>
 using namespace std;
 
@@ -35,17 +42,21 @@ public:
     parent->child.push_back(newChild);
   }
 
-  void printTree(Node *node, int depth = 0) {
+  // Only one print function: pretty format with branches
+  void printTree(Node *node, std::string prefix = "", bool isLast = true) {
     if (!node)
       return;
-    for (int i = 0; i < depth; ++i)
-      cout << "  ";
-    cout << node->data << endl;
-    for (Node *c : node->child) {
-      printTree(c, depth + 1);
+    cout << prefix;
+    cout << (isLast ? "└── " : "├── ");
+    cout << char('a' + node->data) << endl;
+
+    for (size_t i = 0; i < node->child.size(); ++i) {
+      bool last = (i == node->child.size() - 1);
+      printTree(node->child[i], prefix + (isLast ? "    " : "│   "), last);
     }
   }
 
+  // Converts an adjacency matrix (tree) to a Tree structure
   static Tree *fromAdjMatrix(const vector<vector<int>> &adjMatrix,
                              int rootVal) {
     int n = adjMatrix.size();
