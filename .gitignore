@@ -1,0 +1,34 @@
+# Ignore object files and compiled binaries
+*.o
+*.op
+*.obj
+*.exe
+*.out
+*.out.*
+
+# Ignore build directories (common build folders)
+build/
+bin/
+Debug/
+Release/
+
+# Ignore editor backup and swap files
+*~
+*.swp
+*.swo
+
+# Ignore CMake generated files (if you use CMake)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+#Makefile
+dum.cpp
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore VSCode settings (optional)
+.vscode/
+
+# Ignore JetBrains IDE files (optional)
+.idea/
