@@ -1,23 +1,25 @@
 /*
+================================================================================
+Graph and Node Classes with TWO Print Functions
+================================================================================
+
 class Graph
     - Graph(int n)
     - void addEdge(int u, int v)
-    - void printGraph()
-    - Tree* toTree(int rootVal)
+    - void printAdjacencyList() // shows all edges (including cycles)
+    - void printGraph(int start = 0) // pretty DFS print, shows one path per
+node
 
-class Tree
-    - Tree(int rootVal)
-    - void addChild(Node *parent, int childVal)
-    - void printTree(Node *node, std::string prefix = "", bool isLast = true) //
-prints full tree in pretty format
-
-struct Node (Tree::Node)
+struct Node
     - int data
-    - vector<Node *> child
+    - vector<int> neighbors
+
+================================================================================
 */
 
 #include <algorithm>
-#include <functional>
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include <map>
 #include <set>
@@ -25,86 +27,59 @@ struct Node (Tree::Node)
 #include <vector>
 using namespace std;
 
-class Tree {
-public:
-  struct Node {
-    int data;
-    vector<Node *> child;
-    Node(int val) : data(val) {}
-  };
-
-  Node *root;
-
-  Tree(int rootVal) { root = new Node(rootVal); }
-
-  void addChild(Node *parent, int childVal) {
-    Node *newChild = new Node(childVal);
-    parent->child.push_back(newChild);
-  }
-
-  // Only one print function: pretty format with branches
-  void printTree(Node *node, std::string prefix = "", bool isLast = true) {
-    if (!node)
-      return;
-    cout << prefix;
-    cout << (isLast ? "└── " : "├── ");
-    cout << char('a' + node->data) << endl;
-
-    for (size_t i = 0; i < node->child.size(); ++i) {
-      bool last = (i == node->child.size() - 1);
-      printTree(node->child[i], prefix + (isLast ? "    " : "│   "), last);
-    }
-  }
-
-  // Converts an adjacency matrix (tree) to a Tree structure
-  static Tree *fromAdjMatrix(const vector<vector<int>> &adjMatrix,
-                             int rootVal) {
-    int n = adjMatrix.size();
-    Tree *tree = new Tree(rootVal);
-    vector<bool> visited(n, false);
-
-    std::function<void(Node *, int)> dfs = [&](Node *parent, int u) {
-      visited[u] = true;
-      for (int v = 0; v < n; ++v) {
-        if (adjMatrix[u][v] && !visited[v]) {
-          Node *child = new Node(v);
-          parent->child.push_back(child);
-          dfs(child, v);
-        }
-      }
-    };
-
-    dfs(tree->root, rootVal);
-    return tree;
-  }
+struct Node {
+  int data;
+  vector<int> neighbors;
+  Node(int val) : data(val) {}
 };
 
 class Graph {
-private:
-  vector<vector<int>> adjMatrix;
-  int size;
-
 public:
+  vector<Node *> nodes;
+
   Graph(int n) {
-    size = n;
-    adjMatrix = vector<vector<int>>(n, vector<int>(n, 0));
+    for (int i = 0; i < n; ++i)
+      nodes.push_back(new Node(i));
   }
 
   void addEdge(int u, int v) {
-    if (u >= 0 && v >= 0 && u < size && v < size) {
-      adjMatrix[u][v] = 1;
-      adjMatrix[v][u] = 1;
-    }
+    nodes[u]->neighbors.push_back(v);
+    nodes[v]->neighbors.push_back(u); // undirected
   }
 
-  void printGraph() {
-    for (int i = 0; i < size; ++i) {
-      for (int j = 0; j < size; ++j) {
-        cout << adjMatrix[i][j] << " ";
-      }
+  // Print adjacency list: shows all connections including cycles
+  void printAdjacencyList() {
+    cout << "\nAdjacency List:\n";
+    for (auto node : nodes) {
+      cout << char('a' + node->data) << ": ";
+      for (int nb : node->neighbors)
+        cout << char('a' + nb) << " ";
       cout << endl;
     }
   }
 
-  Tree *toTree(int rootVal) { return Tree::fromAdjMatrix(adjMatrix, rootVal); }
+  // Pretty DFS print (shows only first encounter of each node)
+  void printGraph(int start = 0) {
+    vector<bool> visited(nodes.size(), false);
+    printGraphPretty(start, visited, "", true);
+  }
+
+private:
+  void printGraphPretty(int idx, vector<bool> &visited, string prefix,
+                        bool isLast) {
+    visited[idx] = true;
+    cout << prefix << (isLast ? "└── " : "├── ") << char('a' + nodes[idx]->data)
+         << endl;
+    int childPrinted = 0;
+    int total = 0;
+    for (int nb : nodes[idx]->neighbors)
+      if (!visited[nb])
+        ++total;
+    for (int nb : nodes[idx]->neighbors) {
+      if (!visited[nb]) {
+        printGraphPretty(nb, visited, prefix + (isLast ? "    " : "│   "),
+                         ++childPrinted == total);
+      }
+    }
+  }
 };

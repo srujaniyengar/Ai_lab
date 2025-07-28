@@ -1,43 +1,62 @@
 #include "util.h"
-using namespace std;
+#include <unordered_set>
 
-// Returns true if node's data matches the goal value.
-bool GoalTest(Tree::Node *node, int goal) { return node->data == goal; }
+bool GoalTest(Node *node, int goal) { return node->data == goal; }
 
-// Returns all children of the given node.
-vector<Tree::Node *> MoveGen(Tree::Node *node) { return node->child; }
+std::vector<Node *> MoveGen(Graph &graph, Node *node) {
+  std::vector<Node *> result;
+  for (int nb : node->neighbors)
+    result.push_back(graph.nodes[nb]);
+  return result;
+}
 
-// Sample Algorithm 1: Search for a goal value. If found, return the path to it.
-bool sample_algo_1(Tree *tree, int goal, std::vector<int> &path) {
-  set<Tree::Node *> OPEN;
-  map<Tree::Node *, Tree::Node *> parent; // To reconstruct path
-  OPEN.insert(tree->root);
-  parent[tree->root] = nullptr;
+// Random walk: breaks if it revisits a node in the CURRENT path (cycle)
+bool sample_algo_1(Graph &graph, int start, int goal, std::vector<int> &path) {
+  Node *current = graph.nodes[start];
+  std::unordered_set<int> visited; // track nodes in current path
+  path.clear();
 
-  while (!OPEN.empty()) {
-    auto it = OPEN.begin();
-    Tree::Node *n = *it;
-    OPEN.erase(it);
+  std::srand((unsigned)std::time(nullptr));
+  int steps = 0, max_steps = graph.nodes.size() * 10; // avoid infinite loop
 
-    if (GoalTest(n, goal)) {
-      // Reconstruct path from root to goal
-      std::vector<int> temp;
-      for (Tree::Node *cur = n; cur != nullptr; cur = parent[cur])
-        temp.push_back(cur->data);
-      std::reverse(temp.begin(), temp.end());
-      path = temp;
+  while (current && steps < max_steps) {
+    path.push_back(current->data);
+    visited.insert(current->data);
+
+    if (GoalTest(current, goal))
       return true;
-    } else {
-      vector<Tree::Node *> children = MoveGen(n);
-      for (Tree::Node *c : children) {
-        if (parent.count(c) == 0) {
-          OPEN.insert(c);
-          parent[c] = n;
-        }
-      }
+
+    // Get unvisited neighbors (w.r.t. current path)
+    std::vector<Node *> candidates;
+    for (int nb : current->neighbors) {
+      if (visited.count(nb) == 0)
+        candidates.push_back(graph.nodes[nb]);
     }
+
+    if (candidates.empty())
+      return false; // no way forward
+
+    // Randomly pick one neighbor
+    Node *next = candidates[std::rand() % candidates.size()];
+
+    // If next is already in path (shouldn't happen due to filtering), break
+    // anyway
+    if (visited.count(next->data))
+      return false; // cycle detected
+
+    current = next;
+    steps++;
   }
-  return false;
+  return false; // max steps exceeded
+}
+
+void print_menu() {
+  std::cout << "\n========== GRAPH MENU ==========\n";
+  std::cout << "1. Print graph (pretty DFS)\n";
+  std::cout << "2. Print adjacency list\n";
+  std::cout << "3. Search for goal node (random walk, aborts on cycle)\n";
+  std::cout << "4. Exit\n";
+  std::cout << "Enter your choice: ";
 }
 
 int main() {
@@ -51,41 +70,43 @@ int main() {
   g.addEdge(3, 7);
   g.addEdge(3, 8);
   g.addEdge(8, 9);
+  g.addEdge(9, 1); // Cycle
 
-  Tree *tree = g.toTree(0);
+  int choice = 0;
+  while (true) {
+    print_menu();
+    std::cin >> choice;
 
-  cout << "Full tree structure:\n";
-  tree->printTree(tree->root);
-
-  int goal1 = 7;
-  std::vector<int> path1;
-  cout << "\nSearch for goal node 'h':\n";
-  if (sample_algo_1(tree, goal1, path1)) {
-    cout << "Goal node found. Path: ";
-    for (int i = 0; i < path1.size(); ++i) {
-      cout << char('a' + path1[i]);
-      if (i < path1.size() - 1)
-        cout << " -> ";
+    if (choice == 1) {
+      std::cout << "\nGraph structure (pretty DFS print):\n";
+      g.printGraph();
+    } else if (choice == 2) {
+      g.printAdjacencyList();
+    } else if (choice == 3) {
+      int goal;
+      std::cout << "Enter goal node index (0 for 'a', ..., 9 for 'j'): ";
+      std::cin >> goal;
+      std::vector<int> path;
+      std::cout << "\nSearch for goal node '" << char('a' + goal)
+                << "' (random walk, aborts on cycle):\n";
+      if (sample_algo_1(g, 0, goal, path)) {
+        std::cout << "Goal node found. Path: ";
+        for (size_t i = 0; i < path.size(); ++i) {
+          std::cout << char('a' + path[i]);
+          if (i < path.size() - 1)
+            std::cout << " -> ";
+        }
+        std::cout << std::endl;
+      } else {
+        std::cout << "Search failed or encountered a cycle (aborted)."
+                  << std::endl;
+      }
+    } else if (choice == 4) {
+      std::cout << "Exiting. Goodbye!\n";
+      break;
+    } else {
+      std::cout << "Invalid choice. Please try again.\n";
     }
-    cout << endl;
-  } else {
-    cout << "Search failed: Goal node not found." << endl;
   }
-
-  int goal2 = 15;
-  std::vector<int> path2;
-  cout << "\nSearch for goal node 'p':\n";
-  if (sample_algo_1(tree, goal2, path2)) {
-    cout << "Goal node found. Path: ";
-    for (int i = 0; i < path2.size(); ++i) {
-      cout << char('a' + path2[i]);
-      if (i < path2.size() - 1)
-        cout << " -> ";
-    }
-    cout << endl;
-  } else {
-    cout << "Search failed: Goal node not found." << endl;
-  }
-
   return 0;
 }
