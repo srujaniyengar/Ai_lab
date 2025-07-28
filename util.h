@@ -69,31 +69,34 @@ public:
 };
 
 class Graph {
-private:
-  vector<vector<int>> adjMatrix;
-  int size;
+  private:
+    vector<vector<int>> adjMatrix;
+    int size;
 
-public:
-  Graph(int n) {
-    size = n;
-    adjMatrix = vector<vector<int>>(n, vector<int>(n, 0));
-  }
-
-  void addEdge(int u, int v) {
-    if (u >= 0 && v >= 0 && u < size && v < size) {
-      adjMatrix[u][v] = 1;
-      adjMatrix[v][u] = 1;
+  public:
+    Graph(int n) {
+      size = n;
+      adjMatrix = vector<vector<int>>(n, vector<int>(n, 0));
     }
-  }
 
-  void printGraph() {
-    for (int i = 0; i < size; ++i) {
-      for (int j = 0; j < size; ++j) {
-        cout << adjMatrix[i][j] << " ";
+    void addEdge(int u, int v) {
+      if (u >= 0 && v >= 0 && u < size && v < size) {
+        adjMatrix[u][v] = 1;
+        adjMatrix[v][u] = 1;
       }
-      cout << endl;
     }
-  }
+
+    void printGraph() {
+      for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+          cout << adjMatrix[i][j] << " ";
+        }
+        cout << endl;
+      }
+    }
+    vector<vector<int>> return_graph(){
+      return adjMatrix;
+    }
 
   Tree *toTree(int rootVal) { return Tree::fromAdjMatrix(adjMatrix, rootVal); }
 };
