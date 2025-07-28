@@ -19,9 +19,10 @@ char index_to_char(int idx) {
   return (idx >= 0 && idx <= 9) ? ('a' + idx) : '?';
 }
 
-// Implements your described random walk with loop counting (OPEN, abort if node
-// in path)
-bool sample_algo_1(Graph &graph, int start, int goal,
+// Random walk: counts cycles, but does NOT abort on encountering a cycle
+// Returns true if goal node is found, false otherwise
+// Also returns how many steps it took and cycle counts per node
+bool sample_algo_1(Graph &graph, int start, int goal, int &steps_taken,
                    std::map<char, int> &loop_counts) {
   std::vector<int> OPEN;
   std::unordered_set<int> in_path;
@@ -29,26 +30,27 @@ bool sample_algo_1(Graph &graph, int start, int goal,
   OPEN.push_back(start);
   loop_counts.clear();
   std::srand((unsigned)std::time(nullptr));
-  int steps = 0, max_steps = graph.nodes.size() * 10; // avoid infinite loop
+  steps_taken = 0;
+  int max_steps = graph.nodes.size() * 100; // increased to allow more wandering
 
-  while (!OPEN.empty() && steps < max_steps) {
+  while (!OPEN.empty() && steps_taken < max_steps) {
     // Pick a random node from OPEN
     int idx = std::rand() % OPEN.size();
     int node_idx = OPEN[idx];
     // Remove node from OPEN
     OPEN.erase(OPEN.begin() + idx);
 
-    // If node already in path, count and abort (cycle detected)
+    // If node already in path, count as loop but do NOT abort
     if (in_path.count(node_idx)) {
       loop_counts[index_to_char(node_idx)]++;
-      return false;
     }
 
-    // Add to path
+    // Add to path (if not already)
     in_path.insert(node_idx);
 
     // Goal test
     if (node_idx == goal) {
+      steps_taken++;
       return true;
     }
 
@@ -61,7 +63,7 @@ bool sample_algo_1(Graph &graph, int start, int goal,
       OPEN.push_back(nb);
     }
 
-    steps++;
+    steps_taken++;
   }
   return false;
 }
@@ -70,7 +72,7 @@ void print_menu() {
   std::cout << "\n========== GRAPH MENU ==========\n";
   std::cout << "1. Print graph (pretty DFS)\n";
   std::cout << "2. Print adjacency list\n";
-  std::cout << "3. Search for goal node (random walk, aborts on cycle)\n";
+  std::cout << "3. Search for goal node (random walk, counts cycles, steps)\n";
   std::cout << "4. Exit\n";
   std::cout << "Enter your choice: ";
 }
@@ -108,13 +110,16 @@ int main() {
         continue;
       }
       std::map<char, int> loop_counts;
+      int steps_taken = 0;
       std::cout << "\nSearch for goal node '" << index_to_char(goal)
-                << "' (random walk, aborts on cycle):\n";
-      bool success = sample_algo_1(g, 0, goal, loop_counts);
+                << "' (random walk, counts cycles, steps):\n";
+      bool success = sample_algo_1(g, 0, goal, steps_taken, loop_counts);
       if (success) {
         std::cout << "Search success.\n";
+        std::cout << "Total steps taken to reach goal: " << steps_taken << "\n";
       } else {
-        std::cout << "Search failed or encountered a cycle (aborted).\n";
+        std::cout << "Search failed (max steps reached or OPEN empty).\n";
+        std::cout << "Total steps tried: " << steps_taken << "\n";
       }
       std::cout << "Loop/cycle counts from each movegen:\n";
       for (const auto &entry : loop_counts) {
