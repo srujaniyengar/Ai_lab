@@ -5,7 +5,7 @@ using namespace std;
 bool sample_algo_1(int start, const vector<vector<int>>& graph, int target) {
     vector<int> OPEN = {start};
     int count = 0;
-    const int limit = 1000; // Set a limit on number of expansions
+    const int limit = 12; // Set a limit on number of expansions
 
     while (!OPEN.empty() && count < limit) {
         count++;
@@ -21,7 +21,7 @@ bool sample_algo_1(int start, const vector<vector<int>>& graph, int target) {
         // Push all connected nodes (no check for revisits)
         for (int i = 0; i < graph[n].size(); ++i) {
             if (graph[n][i]) {
-                OPEN.insert(OPEN.begin(),i);
+                OPEN.push_back(i);
             }
         }
     }
@@ -46,10 +46,7 @@ int main() {
     g.addEdge(3, 8);
     g.addEdge(8, 9);
 
-    //g.printGraph();
-    Tree *tree = g.toTree(0);
-
-    tree->printTree(tree->root);
+    g.printGraph();
 
     if (sample_algo_1(0, g.return_graph(), 7))
         cout << "Node 7 found!\n";

@@ -64,7 +64,7 @@ int main() {
     g.addEdge(3, 7); // 4-8
     g.addEdge(3, 8); // 4-9
     g.addEdge(8, 9); // 9-10
-    g.printGraph();
+    //g.printGraph();
 
 
   if (sample_algo_2(0,g.return_graph(),7))
