@@ -1,0 +1,15 @@
+8
+X K
+X L
+K X
+K L
+K B
+L X
+L K
+L B
+5
+X 5
+K 3
+L 2
+B 1
+Y 0
