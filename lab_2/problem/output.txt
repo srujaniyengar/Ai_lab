@@ -1,1 +1,70 @@
-
+==============================
+BFS (forward):
+Forward BFS:
+Path: X L Y 
+Nodes expanded: 7
+Time: O(V+E), Space: O(V)
+==============================
+BFS (reverse):
+Reverse BFS:
+Path: Y L X 
+Nodes expanded: 4
+Time: O(V+E), Space: O(V)
+==============================
+Bidirectional BFS:
+Bidirectional BFS:
+Path: X L Y 
+Nodes expanded: 4
+Time: O(b^(d/2)), Space: O(b^(d/2))
+==============================
+DFS (forward):
+Forward DFS:
+Path: X L Y 
+Nodes expanded: 3
+Time: O(V+E), Space: O(V)
+==============================
+DFS (reverse):
+Reverse DFS:
+Path: Y B L K X 
+Nodes expanded: 5
+Time: O(V+E), Space: O(V)
+==============================
+British Museum (forward):
+Forward BMS:
+X K L B Y 
+X K L Y 
+X K B L Y 
+X K B Y 
+X L K B Y 
+X L B Y 
+X L Y 
+Paths found: 7
+Time: O(b^d), Space: O(b^d)
+==============================
+British Museum (reverse):
+Reverse BMS:
+Y L X 
+Y L K X 
+Y L B K X 
+Y B K X 
+Y B K L X 
+Y B L X 
+Y B L K X 
+Paths found: 7
+Time: O(b^d), Space: O(b^d)
+==============================
+Hill Climbing:
+KX.
+LX.
+XL.
+KL.
+BL.
+YL.
+Path: X L Y 
+==============================
+Beam Search:
+Path: X L Y 
+==============================
+Best First Search:
+Path: X L Y 
+==============================

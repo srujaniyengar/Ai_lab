@@ -1,5 +1,4 @@
 /*
-    algo.h
 
     Contains all graph search algorithm implementations for the House Cleaning
    Robot project. Each algorithm solves the problem of finding a path from a
@@ -56,13 +55,11 @@ inline void printPathChar(const std::vector<char> &path,
   out << std::endl;
 }
 
-// Graph structure for char-based algorithms (heuristic-based)
 struct graph {
   std::unordered_map<char, std::vector<char>> adjlist;
   std::unordered_map<char, int> heuristic;
 };
 
-// BFS (forward/reverse)
 inline void bfs(const std::string &src, const std::string &dest,
                 const std::map<std::string, std::vector<std::string>> &adj,
                 bool reverse = false, std::ostream &out = std::cout) {
@@ -99,7 +96,6 @@ inline void bfs(const std::string &src, const std::string &dest,
   out << "No path found.\n";
 }
 
-// DFS (forward/reverse)
 inline void dfs(const std::string &src, const std::string &dest,
                 const std::map<std::string, std::vector<std::string>> &adj,
                 bool reverse = false, std::ostream &out = std::cout) {
@@ -136,7 +132,6 @@ inline void dfs(const std::string &src, const std::string &dest,
   out << "No path found.\n";
 }
 
-// Bidirectional BFS
 inline void biBFS(const std::string &src, const std::string &dest,
                   const std::map<std::string, std::vector<std::string>> &adj,
                   std::ostream &out = std::cout) {
@@ -196,7 +191,6 @@ inline void biBFS(const std::string &src, const std::string &dest,
   out << "No path found.\n";
 }
 
-// British Museum Search (all paths)
 inline void
 britishMuseum(const std::string &src,
               const std::map<std::string, std::vector<std::string>> &adj,
@@ -235,147 +229,121 @@ britishMuseum(const std::string &src,
   out << "Time: O(b^d), Space: O(b^d)\n";
 }
 
-// Hill Climbing (greedy, heuristic-based)
+// --- Heuristic algorithms (corrected) ---
+
 inline void hillclimbing(char start, char goal, graph &g,
                          std::ostream &out = std::cout) {
-  auto current = start;
-  std::unordered_map<char, bool> visited;
+  char current = start;
   std::vector<char> path;
   path.push_back(current);
-  visited[current] = true;
-  while (true) {
-    out << "Current Node: " << current << " (h=" << g.heuristic[current]
-        << ")\n";
-    if (goal == current) {
-      out << "Goal has been found\nPath: ";
-      printPathChar(path, out);
-      out << "Complexity (Hill Climbing): Time = O(b*h), Space = O(h)\n";
-      return;
-    }
-    std::vector<char> neighbours = g.adjlist[current];
-    std::vector<char> unvisited;
-    for (auto node : neighbours) {
-      if (!visited[node])
-        unvisited.push_back(node);
-    }
-    if (unvisited.empty()) {
-      out << "No unvisited neighbours. Dead end reached\nPath: ";
-      printPathChar(path, out);
-      out << "Complexity (Hill Climbing): Time = O(b*h), Space = O(h)\n";
-      return;
-    }
-    char best = unvisited[0];
-    for (auto node : unvisited) {
-      if (g.heuristic[node] < g.heuristic[best]) {
-        best = node;
+
+  while (current != goal) {
+    char best_neighbor = '\0';                 // no neighbor chosen yet
+    int best_heuristic = g.heuristic[current]; // current node's heuristic
+
+    for (char neighbor : g.adjlist[current]) {
+      out << neighbor << current << ".\n"; // debug: neighbor and current
+      if (g.heuristic[neighbor] < best_heuristic) {
+        best_heuristic = g.heuristic[neighbor];
+        best_neighbor = neighbor;
       }
     }
-    out << "Moving from " << current << " -> " << best << "\n";
-    current = best;
-    visited[current] = true;
+    if (best_neighbor == '\0') {
+      out << "Stuck at local optimum. No path found.\n";
+      out << "Path: ";
+      printPathChar(path, out);
+      return;
+    }
+    current = best_neighbor;
     path.push_back(current);
   }
+  out << "Path: ";
+  printPathChar(path, out);
 }
-
-// Beam Search (heuristic-based, configurable width)
 struct NodePath {
   char node;
-  std::string path;
+  int heuristic_val;
+  std::vector<char> path;
+  NodePath() : node(0), heuristic_val(0), path() {} // default constructor
+  NodePath(char n, int h, std::vector<char> p)
+      : node(n), heuristic_val(h), path(std::move(p)) {}
 };
 
 inline void beamsearch(char start, char goal, graph &g, int beamwidth,
                        std::ostream &out = std::cout) {
-  std::vector<NodePath> front = {{start, std::string(1, start)}};
-  std::unordered_set<char> visited;
-  visited.insert(start);
-  while (!front.empty()) {
-    for (auto &np : front) {
-      out << "Front Node: " << np.node << " (h=" << g.heuristic[np.node]
-          << ")\n";
+  std::vector<NodePath> current_level;
+  current_level.emplace_back(start, g.heuristic[start],
+                             std::vector<char>{start});
+  while (!current_level.empty()) {
+    std::vector<NodePath> next_level;
+    for (auto &np : current_level) {
       if (np.node == goal) {
-        out << "Goal has been found. Path: ";
-        for (char c : np.path)
-          out << c << " ";
-        out << "\n";
-        out << "Complexity (Beam Search): Time = O(b^m), Space = O(b*m)\n";
+        out << "Path: ";
+        printPathChar(np.path, out);
         return;
       }
-    }
-    std::vector<NodePath> successors;
-    for (auto &np : front) {
-      for (char neigh : g.adjlist[np.node]) {
-        if (visited.find(neigh) == visited.end()) {
-          successors.push_back({neigh, np.path + neigh});
+      for (char neighbor : g.adjlist[np.node]) {
+        if (std::find(np.path.begin(), np.path.end(), neighbor) ==
+            np.path.end()) {
+          std::vector<char> new_path = np.path;
+          new_path.push_back(neighbor);
+          next_level.emplace_back(neighbor, g.heuristic[neighbor], new_path);
         }
       }
     }
-    if (successors.empty()) {
-      out << "No successors. Search failed\n";
-      out << "Complexity (Beam Search): Time = O(b^m), Space = O(b*m)\n";
-      return;
-    }
-    std::sort(successors.begin(), successors.end(), [&](auto &a, auto &b) {
-      return g.heuristic[a.node] < g.heuristic[b.node];
-    });
-    if ((int)successors.size() > beamwidth)
-      successors.resize(beamwidth);
-    for (auto &np : successors)
-      visited.insert(np.node);
-    front = successors;
-    out << "Next front: ";
-    for (auto &np : front)
-      out << np.node << " ";
-    out << "\n";
+    std::sort(next_level.begin(), next_level.end(),
+              [](const NodePath &a, const NodePath &b) {
+                return a.heuristic_val < b.heuristic_val;
+              });
+    if (next_level.size() > (size_t)beamwidth)
+      next_level.resize(beamwidth);
+    current_level = std::move(next_level);
   }
-  out << "Search failed\n";
-  out << "Complexity (Beam Search): Time = O(b^m), Space = O(b*m)\n";
+  out << "No path found\n";
 }
 
-// Best First Search (priority queue, heuristic-based)
 inline void bestFirstSearch(char start, char goal, graph &g,
                             std::ostream &out = std::cout) {
   struct PQNode {
     char node;
+    int heuristic_val;
     std::vector<char> path;
-    int h;
-    bool operator>(const PQNode &other) const { return h > other.h; }
+    PQNode(char n, int h, std::vector<char> p)
+        : node(n), heuristic_val(h), path(std::move(p)) {}
+    bool operator>(const PQNode &other) const {
+      return heuristic_val > other.heuristic_val;
+    }
   };
 
   std::priority_queue<PQNode, std::vector<PQNode>, std::greater<PQNode>> pq;
+  pq.push(PQNode(start, g.heuristic[start], {start}));
   std::unordered_set<char> visited;
-  pq.push({start, {start}, g.heuristic[start]});
-  int expanded = 0;
 
   while (!pq.empty()) {
-    auto curr = pq.top();
+    auto current = pq.top();
     pq.pop();
-    expanded++;
-    if (visited.count(curr.node))
+    if (visited.count(current.node))
       continue;
-    visited.insert(curr.node);
+    visited.insert(current.node);
 
-    out << "Visiting " << curr.node << " (h=" << curr.h << ")\n";
-    if (curr.node == goal) {
-      out << "Goal found!\nPath: ";
-      printPathChar(curr.path, out);
-      out << "Nodes expanded: " << expanded << std::endl;
-      out << "Complexity (Best First Search): Time = O(b log n), Space = "
-             "O(n)\n";
+    if (current.node == goal) {
+      out << "Path: ";
+      printPathChar(current.path, out);
       return;
     }
-    for (char neigh : g.adjlist[curr.node]) {
-      if (!visited.count(neigh)) {
-        std::vector<char> newPath = curr.path;
-        newPath.push_back(neigh);
-        pq.push({neigh, newPath, g.heuristic[neigh]});
+
+    for (char neighbor : g.adjlist[current.node]) {
+      if (std::find(current.path.begin(), current.path.end(), neighbor) ==
+          current.path.end()) {
+        std::vector<char> new_path = current.path;
+        new_path.push_back(neighbor);
+        pq.push(PQNode(neighbor, g.heuristic[neighbor], new_path));
       }
     }
   }
-  out << "No path found.\n";
-  out << "Complexity (Best First Search): Time = O(b log n), Space = O(n)\n";
+  out << "No path found\n";
 }
 
-// Run all algorithms and print output
 inline void
 run_all_algorithms(const std::string &src, const std::string &dest,
                    const std::map<std::string, std::vector<std::string>> &adj,

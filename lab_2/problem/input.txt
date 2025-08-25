@@ -1,4 +1,4 @@
-8
+12
 X K
 X L
 K X
@@ -7,6 +7,10 @@ K B
 L X
 L K
 L B
+L Y      
+B Y      
+Y L      
+Y B      
 5
 X 5
 K 3
